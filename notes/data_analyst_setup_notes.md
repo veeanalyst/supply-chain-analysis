@@ -3,6 +3,40 @@
 
 ---
 
+## Project Case Study: Fixing a Real Encoding Mismatch (DataCo Supply Chain Dataset)
+
+While loading the DataCo Smart Supply Chain CSV (~180,519 rows) into PostgreSQL on Windows, `\copy` failed with:
+
+```
+ERROR: character with byte sequence 0x81 in encoding "WIN1252" has no equivalent in encoding "UTF8"
+```
+
+**Diagnosis:** Byte `0x81` is undefined in Windows-1252 — meaning the file wasn't actually Windows-1252 at all, but likely ISO-8859-1 (Latin-1), a related encoding where every byte value 0–255 is defined.
+
+**Fix, applied in PowerShell**, using .NET's encoding classes directly (PowerShell's built-in `-Encoding` flag doesn't expose Latin-1 by name):
+```powershell
+$content = [System.IO.File]::ReadAllText(
+    "path\to\DataCoSupplyChainDataset.csv",
+    [System.Text.Encoding]::GetEncoding(28591)   # 28591 = ISO-8859-1
+)
+[System.IO.File]::WriteAllText(
+    "path\to\DataCo_utf8.csv",
+    $content,
+    [System.Text.UTF8Encoding]::new($false)      # false = no BOM
+)
+```
+
+**Still failed after this fix — same byte, same line.** This revealed a *second*, independent issue: PostgreSQL's `client_encoding` session setting was still defaulting to Windows-1252, silently misreading the now-correctly-encoded file. Fixed with:
+```sql
+SET client_encoding TO 'UTF8';
+```
+
+**Result:** `\copy` succeeded, loading all 180,519 rows on the next attempt.
+
+**Why this is worth documenting:** the same error message appeared twice, from two genuinely different root causes (file encoding, then client encoding) — a reminder that an unchanged error after a fix doesn't always mean the fix failed; it can mean there's a second, independent problem in a different layer of the stack. Methodically isolating *which* layer (file → terminal → client) was still wrong, rather than re-guessing at the file itself, is what resolved it.
+
+---
+
 ## 1. Encoding: the invisible bug that breaks real-world data
 
 **The concept:** A file is just a sequence of bytes. "Encoding" is the rulebook that turns those bytes into readable characters. If two systems disagree on the rulebook, you get garbled text or hard errors — even though nothing is visibly "wrong" with the file.
