@@ -29,8 +29,7 @@ from Kaggle if you want to reproduce this analysis.
    by late deliveries?
 
 ## Key Findings
-*(To be completed once all queries are run — this is the headline section
-recruiters will read first.)*
+*(To be completed once all queries are run.)*
 
 - **Q1 — Delivery rate:** [X]% of orders overall were late; worst region was
   [Region] at [Y]%, [Z] points above the company average.
