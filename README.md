@@ -9,9 +9,6 @@ where operational fixes would have the greatest impact.
 [DataCo Smart Supply Chain Dataset](https://www.kaggle.com/datasets/shashwatwork/dataco-smart-supply-chain-for-big-data-analysis)
 — 180,519 rows, covering orders from January 2015 to January 2018.
 
-Raw CSV is not included in this repo (see `.gitignore`) — download it directly
-from Kaggle if you want to reproduce this analysis.
-
 ## Tools & Environment
 - **Database:** PostgreSQL 18
 - **Analysis:** SQL (conditional aggregation, `HAVING`, window functions)
